@@ -1,6 +1,10 @@
 import numpy as np
 import pylab as plt
+import os
 import os.path
+
+if not os.path.exists('FIGS'):
+    os.makedirs('FIGS')
 
 cupsoda_data = np.genfromtxt('cupsoda_timings_all.csv', delimiter=',', dtype=None, names=True)
 scipy_data = np.genfromtxt('scipy_timings_all.csv', delimiter=',', dtype=None, names=True)
