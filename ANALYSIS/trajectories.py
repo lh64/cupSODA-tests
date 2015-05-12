@@ -3,13 +3,17 @@ import numpy as np
 import pysb.integrate
 from pysb.integrate import odesolve
 import matplotlib.cm as cm
-import os.path
+import os
+
+figs = os.path.join('..','FIGS')
+if not os.path.exists(figs):
+    os.makedirs(figs)
 
 models = ['tyson', 'ras', 'earm']
 
 for m in models:
     
-    fig = plt.figure()
+    plt.figure(m)
     ax = plt.subplot(111)
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -36,10 +40,10 @@ for m in models:
     else:
         ax.legend(loc='center left', bbox_to_anchor=(1.05,0.5))
         
-    plt.xlabel('Time (s)')
-    plt.ylabel('Normalized population')
+    plt.xlabel('time (s)')
+    plt.ylabel('normalized population')
     
-    plt.savefig(os.path.join('FIGS','%s_traj.pdf' % m))
+    plt.savefig(os.path.join(figs,'%s_traj.pdf' % m))
     
 plt.show()
 
