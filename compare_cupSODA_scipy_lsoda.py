@@ -40,7 +40,9 @@ vol = 0
 card = 'K20c'
 #card = 'gtx760'
 
-
+CPU = 'Intel-core-I5'
+GHZ = '2.5'
+num_processes = 2
 
 params_names = [p.name for p in model.parameters]
 init_name = [p[1].name for p in model.initial_conditions]
@@ -58,11 +60,10 @@ par_dict = {par_names[i] : i for i in range(len(par_names))}
 par_vals = np.array([model.parameters[nm].value for nm in par_names])
 
 
-global output
-output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
+
 def main(number_particles):
-    global output
     num_particles = int(number_particles)
+    global output
     if run == "cupSODA":
         c_matrix = np.zeros((num_particles, len(model.reactions)))
         rate_args = []
@@ -115,20 +116,35 @@ def main(number_particles):
         solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
         c_matrix = np.zeros((num_particles, len(nominal_values)))
         c_matrix[:,:] = nominal_values
-        pool = multiprocessing.Pool()
+        pool = multiprocessing.Pool(processes=num_processes)
         Start = time.time()
         pool.map(RUN,c_matrix)
-        print 'sim = %s , time = %s sec' % (number_particles,time.time() - Start)
+        TIME = time.time() - Start
+        print 'sim = %s , time = %s sec' % (number_particles,TIME)
+        output +='%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'% \
+                (name,num_particles,TIME,RTOL,ATOL,mxstep,np.max(tspan),len(tspan),CPU,GHZ,str(num_processes))
 def RUN(params):
     solver.run(params)
 
 if run =='scipy':
+    
+    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
+    global output    
     for j in (10,100,1000,10000,100000):
         main(j)
 if run =='scipy-mp':
+    global output
+    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz\n"
     for j in (10,100,1000,10000,100000):
         main(j)
+    print output
+    utFile = open(sys.argv[2],'w')
+    outFile.write(output)
+    outFile.close()
 if run == 'cupSODA':
+
+    output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
+    global output
     set_cupSODA_path("/home/pinojc/CUPSODA")
     for j in (10,100,1000,10000,100000):
         main(j)
