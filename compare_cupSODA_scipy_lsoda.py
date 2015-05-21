@@ -39,10 +39,15 @@ det = 1
 vol = 0
 card = 'K20c'
 #card = 'gtx760'
+#puma
+CPU = 'Intel-Xeon-E5-2687W-v2'
+GHZ = '3.40'
 
-CPU = 'Intel-core-I5'
-GHZ = '2.5'
-num_processes = 2
+#macbook
+#CPU = 'Intel-core-I5'
+#GHZ = '2.5'
+
+num_processes = 16
 
 params_names = [p.name for p in model.parameters]
 init_name = [p[1].name for p in model.initial_conditions]
@@ -138,7 +143,7 @@ if run =='scipy-mp':
     for j in (10,100,1000,10000,100000):
         main(j)
     print output
-    utFile = open(sys.argv[2],'w')
+    outFile = open(sys.argv[2],'w')
     outFile.write(output)
     outFile.close()
 if run == 'cupSODA':
