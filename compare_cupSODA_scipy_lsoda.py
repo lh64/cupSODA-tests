@@ -5,7 +5,6 @@ Created on Tue Mar 24 22:00:07 2015
 @author: James C. Pino
 """
 import time
-import pysb.integrate2
 import pysb.integrate
 import pysb
 import numpy as np
@@ -14,7 +13,7 @@ import os
 from pysb.tools.cupsoda import *
 from pysb.bng import generate_equations
 import sys
-#run = sys.argv[1]
+
 name = sys.argv[1]
 #name = 'tyson'
 if name == 'ras':
@@ -27,8 +26,9 @@ elif name == 'tyson':
     from pysb.examples.tyson_oscillator import model
     tspan = np.linspace(0,100,100)
 
+run = 'scipy-mp'
 #run = 'scipy'
-run ="cupSODA"
+#run ="cupSODA"
 
 generate_equations(model)
 
@@ -103,14 +103,29 @@ def main(number_particles):
                 print 'removed directory'
 
     if run =="scipy":
-        solver = pysb.integrate2.Solver(model, tspan,rtol=1e-6, atol=1e-6, integrator='lsoda', mxstep=mxstep)
-        Time = np.zeros(number_particles)
+        solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
         Start = time.time()
         for i in xrange(number_particles):
             Time[i] = solver.run()
         print 'sim = %s , time = %s sec' % (number_particles,time.time() - Start)
-        print 'time of solver itself',np.sum(Time)
+    
+    if run == 'scipy-mp':
+        import multiprocessing 
+        global solver
+        solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
+        c_matrix = np.zeros((num_particles, len(nominal_values)))
+        c_matrix[:,:] = nominal_values
+        pool = multiprocessing.Pool()
+        Start = time.time()
+        pool.map(RUN,c_matrix)
+        print 'sim = %s , time = %s sec' % (number_particles,time.time() - Start)
+def RUN(params):
+    solver.run(params)
+
 if run =='scipy':
+    for j in (10,100,1000,10000,100000):
+        main(j)
+if run =='scipy-mp':
     for j in (10,100,1000,10000,100000):
         main(j)
 if run == 'cupSODA':
