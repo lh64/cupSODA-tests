@@ -14,20 +14,23 @@ from pysb.tools.cupsoda import *
 from pysb.bng import generate_equations
 import sys
 
-name = sys.argv[1]
-#name = 'tyson'
+#name = sys.argv[1]
+name = 'tyson'
 if name == 'ras':
     from ras_amp_pka import model
     tspan = np.linspace(0,1500,100)
+    simulations = [10,100,1000,10000,100000]
 elif name == 'earm':
     from earm.lopez_embedded import model
     tspan = np.linspace(0, 20000,100)
+    simulations = [10,100,1000,10000]
 elif name == 'tyson':
     from pysb.examples.tyson_oscillator import model
     tspan = np.linspace(0,100,100)
+    simulations = [10,100,1000,10000,100000]
 
-run = 'scipy-mp'
-#run = 'scipy'
+
+run = 'scipy'
 #run ="cupSODA"
 
 generate_equations(model)
@@ -64,7 +67,16 @@ xnominal = np.log10(nominal_values[rate_mask])
 par_dict = {par_names[i] : i for i in range(len(par_names))}
 par_vals = np.array([model.parameters[nm].value for nm in par_names])
 
-
+if run =='scipy':
+    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
+    global output 
+    solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
+    def RUN(params):
+        solver.run(params)
+if run == 'cupSODA':
+    set_cupSODA_path("/home/pinojc/CUPSODA")
+    output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
+    global output
 
 def main(number_particles):
     num_particles = int(number_particles)
@@ -107,18 +119,11 @@ def main(number_particles):
                 print 'out==',solver.yobs[0][0],solver.yobs[0][-1],'==out'
                 os.system('rm -r %s'%os.path.join('.','CUPSODA_%s')%model.name)
                 print 'removed directory'
-
-    if run =="scipy":
-        solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
-        Start = time.time()
-        for i in xrange(number_particles):
-            Time[i] = solver.run()
-        print 'sim = %s , time = %s sec' % (number_particles,time.time() - Start)
     
-    if run == 'scipy-mp':
+    if run == 'scipy':
         import multiprocessing 
         global solver
-        solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
+        
         c_matrix = np.zeros((num_particles, len(nominal_values)))
         c_matrix[:,:] = nominal_values
         pool = multiprocessing.Pool(processes=num_processes)
@@ -128,35 +133,16 @@ def main(number_particles):
         print 'sim = %s , time = %s sec' % (number_particles,TIME)
         output +='%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'% \
                 (name,num_particles,TIME,RTOL,ATOL,mxstep,np.max(tspan),len(tspan),CPU,GHZ,str(num_processes))
-def RUN(params):
-    solver.run(params)
 
-if run =='scipy':
-    
-    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
-    global output    
-    for j in (10,100,1000,10000,100000):
-        main(j)
-if run =='scipy-mp':
-    global output
-    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz\n"
-    for j in (10,100,1000,10000,100000):
-        main(j)
-    print output
-    outFile = open(sys.argv[2],'w')
-    outFile.write(output)
-    outFile.close()
-if run == 'cupSODA':
 
-    output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
-    global output
-    set_cupSODA_path("/home/pinojc/CUPSODA")
-    for j in (10,100,1000,10000,100000):
-        main(j)
-    outFile = open(sys.argv[2],'w')
-    outFile.write(output)
-    outFile.close()
-    quit()
+
+for j in simulations:
+    main(j)
+print output
+outFile = open(sys.argv[2],'w')
+outFile.write(output)
+outFile.close()
+
 
 
 
