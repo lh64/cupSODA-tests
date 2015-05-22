@@ -15,8 +15,8 @@ from pysb.bng import generate_equations
 import sys
 import multiprocessing
 
-#name = sys.argv[1]
-name = 'tyson'
+name = sys.argv[1]
+#name = 'tyson'
 if name == 'ras':
     from ras_amp_pka import model
     tspan = np.linspace(0,1500,100)
@@ -69,6 +69,7 @@ par_dict = {par_names[i] : i for i in range(len(par_names))}
 par_vals = np.array([model.parameters[nm].value for nm in par_names])
 
 if run =='scipy':
+    global output
     output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
     #global output
     solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
@@ -81,7 +82,7 @@ if run == 'cupSODA':
 
 def main(number_particles):
     num_particles = int(number_particles)
-    #global output
+    global output
     if run == "cupSODA":
         c_matrix = np.zeros((num_particles, len(model.reactions)))
         rate_args = []
@@ -136,10 +137,11 @@ def main(number_particles):
                 (name,num_particles,TIME,RTOL,ATOL,mxstep,np.max(tspan),len(tspan),CPU,GHZ,str(num_processes))
 
 if multi == True:
-    for i in (1,2,4,8,16,32):
+    for i in [1,2,4,8,16,32]:
+        print i
         num_processes = i
-    for j in simulations:
-        main(j)
+        for j in simulations:
+            main(j)
 else:
     for j in simulations:
         main(j)
