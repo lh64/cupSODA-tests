@@ -16,8 +16,8 @@ import sys
 import scipy.interpolate
 import multiprocessing
 
-#name = sys.argv[1]
-name = 'tyson'
+name = sys.argv[1]
+#name = 'tyson'
 if name == 'ras':
     from ras_amp_pka import model
     tspan = np.linspace(0,1500,100)
@@ -186,7 +186,7 @@ def main():
         num_particles = len(MX_0)
         mem = 2
         i = 16
-        solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=False)
+        solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=True)
         Start = time.time()
         solver.run(c_matrix, MX_0 , n_blocks = np.int(num_particles/i), \
         outdir=os.path.join('.','CUPSODA_%s')%model.name, gpu=2,max_steps=mxstep,load_conc_data=False,memory_usage=mem)
