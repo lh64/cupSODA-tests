@@ -246,7 +246,8 @@ for i in range(len(proteins_of_interest)):
                 elif  b < a :
                     tmp = np.loadtxt('output_%s.txt'%str(counter))
                     counter += 1
-                    image[y+a,x+b] = tmp[0,-1]
+                    tmp = likelihood(tmp[:,3])
+                    image[y+a,x+b] = tmp
    
 plt.imshow(image,interpolation='nearest')
 plt.savefig('earm_sensitivity.png')
