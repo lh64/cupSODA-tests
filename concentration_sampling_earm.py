@@ -220,8 +220,8 @@ if multi == True:
         num_processes = i
         for j in simulations:
             main(j)
-else:
-    main()
+#else:
+#    main()
 print output
 #outFile = open(sys.argv[2],'w')
 #outFile.write(output)
@@ -246,11 +246,11 @@ for i in range(len(proteins_of_interest)):
                 elif  b < a :
                     tmp = np.loadtxt('output_%s.txt'%str(counter))
                     counter += 1
-                    tmp = likelihood(tmp[:,3])
+                    tmp = likelihood(tmp[:,2])
                     image[y+a,x+b] = tmp
-plt.imshow(all,interpolation='nearest',vmin=-1,vmax=1,origin='lower',cmap=plt.get_cmap('bwr'))
-plt.xticks(np.linspace(0,len(all),len(proteins_of_interest)),proteins_of_interest,rotation='vertical')
-plt.yticks(np.linspace(0,len(all),len(proteins_of_interest)),proteins_of_interest)
+plt.imshow(image,interpolation='nearest',vmin=-1,vmax=1,origin='lower',cmap=plt.get_cmap('bwr'))
+plt.xticks(np.linspace(0,len(image),len(proteins_of_interest)),proteins_of_interest,rotation='vertical')
+plt.yticks(np.linspace(0,len(image),len(proteins_of_interest)),proteins_of_interest)
 plt.colorbar()
 plt.savefig('earm_sensitivity.png')
 plt.show()   
