@@ -98,7 +98,7 @@ def likelihood1(initial_tmp):
             t90 = 0
     td = (t10 + t90) / 2
     return   td 
-#tod = likelihood1(initial_tmp)
+tod = likelihood1(initial_tmp)
 #print tod
 
 def likelihood(ysim_momp):
@@ -108,7 +108,7 @@ def likelihood(ysim_momp):
         ysim_momp_norm = ysim_momp
         t10 = 0
         t90 = 0
-        return 0
+        return -1
     else:
         ysim_momp_norm = ysim_momp / np.nanmax(ysim_momp)
         st, sc, sk = scipy.interpolate.splrep(tspan, ysim_momp_norm)
@@ -248,10 +248,12 @@ for i in range(len(proteins_of_interest)):
                     counter += 1
                     tmp = likelihood(tmp[:,3])
                     image[y+a,x+b] = tmp
-   
-plt.imshow(image,interpolation='nearest')
+plt.imshow(all,interpolation='nearest',vmin=-1,vmax=1,origin='lower',cmap=plt.get_cmap('bwr'))
+plt.xticks(np.linspace(0,len(all),len(proteins_of_interest)),proteins_of_interest,rotation='vertical')
+plt.yticks(np.linspace(0,len(all),len(proteins_of_interest)),proteins_of_interest)
+plt.colorbar()
 plt.savefig('earm_sensitivity.png')
-plt.show()
+plt.show()   
 
 
 
