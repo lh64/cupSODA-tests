@@ -16,22 +16,23 @@ import sys
 import scipy.interpolate
 import multiprocessing
 
-name = sys.argv[1]
-#name = 'earm'
+#name = sys.argv[1]
+name = 'earm'
 if name == 'ras':
     from ras_amp_pka import model
     tspan = np.linspace(0,1500,100)
     simulations = [10,100,1000,10000,100000]
 elif name == 'tyson':
     from pysb.examples.tyson_oscillator import model
-    tspan = np.linspace(0,100,100)
+    tspan = np.linspace(0,25,50)
     simulations = [10,100,1000,10000,100000]
 elif name == 'earm':
     from earm.lopez_embedded import model
     tspan = np.linspace(0, 20000,100)
     simulations = [10,100,1000,10000]
+from pysb.integrate import odesolve
 
-
+ref = odesolve(model, tspan, integrator='lsoda', verbose=False)
 
 run = 'cupSODA'
 multi = False
@@ -51,7 +52,6 @@ solver = pysb.integrate.Solver(model, tspan, integrator='vode', rtol=1e-6, atol=
 proteins_of_interest = []
 for i in model.initial_conditions:
     proteins_of_interest.append(i[1].name)
-
 key_list = []
 initial_tmp = dict()
 for species, keys in  model.initial_conditions:
@@ -98,7 +98,7 @@ def likelihood1(initial_tmp):
             t90 = 0
     td = (t10 + t90) / 2
     return   td 
-tod = likelihood1(initial_tmp)
+#tod = likelihood1(initial_tmp)
 #print tod
 
 def likelihood(ysim_momp):
@@ -120,15 +120,18 @@ def likelihood(ysim_momp):
             t90 = 0
     td = (t10 + t90) / 2
     return  (td-tod)/tod 
-    
+def like(data):
+    return np.sum((data - ref['YT'][-1]))
 
-
-vals = [.5,.75,1.,]
+vals = [.75,1.,1.25]
 #vals = np.hstack((np.linspace(.7,.9,5),np.logspace(0,1,5)))
 
 #size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest)-len(proteins_of_interest))*len(vals)*len(vals)/2
 size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest))*len(vals)*len(vals) 
-
+for each in model.initial_conditions:
+    print each
+for each in model.species:
+    print each
 
 c_matrix = np.zeros((size_of_matrix, len(model.reactions)))
 rate_args = []
@@ -147,30 +150,32 @@ for j in range(len(model.reactions)):
 MX_0 = np.zeros((size_of_matrix,len(model.species)))
 for i in xrange(len(model.initial_conditions)):
     for j in xrange(len(model.species)):
-        if str(model.initial_conditions[i][0]) == str(model.species[j]): # The ComplexPattern objects are not the same, even though they refer to the same species (ask about this)
-            x = model.initial_conditions[i][1]
-            MX_0[:,j] = [x.value for each in xrange(size_of_matrix)]
-print np.shape(MX_0)
+        if str(model.initial_conditions[i][0]) == str(model.species[j]):
+            x = model.initial_conditions[i][1].value
+            MX_0[:,j] = x
+initi = MX_0.copy()
 image = np.zeros((len(proteins_of_interest)*len(vals),len(proteins_of_interest)*len(vals)))
-print np.shape(image)
-print np.shape(image.flatten())
-#quit()
 done = []
 counter = 0
 for i,one  in enumerate(proteins_of_interest):
     for j,two in enumerate(proteins_of_interest):
-        #if i == j:
-        #    continue
+#         if i == j:
+#             continue
         #if one+two in done:
         #    continue
         #done.append(one+two)
         #done.append(two+one)
         for a,c in enumerate(vals):
-            MX_0[counter,i] *= c
             for b,d in enumerate(vals):
-                MX_0[counter,j] *= d
+                MX_0[counter,i] *= c
+                if i != j:
+                    MX_0[counter,j] *= d
                 counter+=1
-
+print size_of_matrix
+print counter
+#plt.plot(MX_0 - initi)
+#plt.show()
+#quit()
 if run =='scipy':
     global output
     output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
@@ -222,7 +227,7 @@ if multi == True:
             main(j)
 else:
     main()
-print output
+#print output
 #outFile = open(sys.argv[2],'w')
 #outFile.write(output)
 #outFile.close()
@@ -247,7 +252,7 @@ counter = 0
 #                     tmp = np.loadtxt('output_%s.txt'%str(counter))
 #                     counter += 1
 #                     tmp = likelihood(tmp[:,2])
-#                     image[y+a,x+b] = tmp
+#                     image[x+a,y+b] = tmp
 counter = 0
 started = False
 for i in range(len(proteins_of_interest)):
@@ -263,20 +268,39 @@ for i in range(len(proteins_of_interest)):
                     smac = tmp[:,1]
                     cparp = tmp[:,2]
                     started = True
+                    plt.plot(tmp)
+                    plt.show()
                 else:
                     tbid = np.column_stack((tbid,tmp[:,0]))
                     smac = np.column_stack((smac,tmp[:,1]))
                     cparp = np.column_stack((cparp,tmp[:,2]))
   
+plt.plot(tbid)
+plt.show()
+blank = np.zeros(np.shape(smac)[1])  
+for i in range(np.shape(smac)[1]):
+    #blank[i] = likelihood(smac[:,i])
+    blank[i] = like(tbid[-1,i])
 
-blank = np.zeros(np.shape(cparp)[1])  
-for i in range(np.shape(cparp)[1]):
-    blank[i] = likelihood(cparp[:,i])
-image = blank.reshape(np.shape(image))
-
-plt.imshow(image,interpolation='nearest',vmin=-1,vmax=1,origin='lower',cmap=plt.get_cmap('bwr'))
-plt.xticks(np.linspace(0,len(image),len(proteins_of_interest)),proteins_of_interest,rotation='vertical')
-plt.yticks(np.linspace(0,len(image),len(proteins_of_interest)),proteins_of_interest)
+counter=0
+for i in range(len(proteins_of_interest)):
+    y = i*len(vals)
+    for j in range(len(proteins_of_interest)):
+        x = j *len(vals)
+        if x == y:
+            for a in range(len(vals)):
+                for b in range(len(vals)):
+                    counter+=1
+            continue
+        for a in range(len(vals)):
+            for b in range(len(vals)):
+                tmp = likelihood(smac[:,i])
+                image[x+a,y+b] = tmp
+                counter += 1
+plt.imshow(image,interpolation='nearest',origin='lower',cmap=plt.get_cmap('bwr'))
+plt.xticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest,rotation='vertical')
+plt.yticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest)
+plt.grid(True,which='minor')
 plt.colorbar()
 plt.savefig('earm_sensitivity.png')
 plt.show()   
