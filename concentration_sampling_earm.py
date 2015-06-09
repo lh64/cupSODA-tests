@@ -98,7 +98,7 @@ def likelihood1(initial_tmp):
             t90 = 0
     td = (t10 + t90) / 2
     return   td 
-#tod = likelihood1(initial_tmp)
+tod = likelihood1(initial_tmp)
 #print tod
 
 def likelihood(ysim_momp):
@@ -123,8 +123,8 @@ def likelihood(ysim_momp):
 def like(data):
     return np.sum((data - ref['YT'][-1]))
 
-vals = [.75,1.,1.25]
-#vals = np.hstack((np.linspace(.7,.9,5),np.logspace(0,1,5)))
+#vals = [.75,1.,1.25]
+vals = np.hstack((np.linspace(.7,.9,3),np.logspace(0,.3,5)))
 
 #size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest)-len(proteins_of_interest))*len(vals)*len(vals)/2
 size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest))*len(vals)*len(vals) 
@@ -268,19 +268,18 @@ for i in range(len(proteins_of_interest)):
                     smac = tmp[:,1]
                     cparp = tmp[:,2]
                     started = True
-                    plt.plot(tmp)
-                    plt.show()
+                    #plt.plot(tmp)
+                    #plt.show()
                 else:
                     tbid = np.column_stack((tbid,tmp[:,0]))
                     smac = np.column_stack((smac,tmp[:,1]))
                     cparp = np.column_stack((cparp,tmp[:,2]))
   
-plt.plot(tbid)
-plt.show()
+
 blank = np.zeros(np.shape(smac)[1])  
-for i in range(np.shape(smac)[1]):
+#for i in range(np.shape(smac)[1]):
     #blank[i] = likelihood(smac[:,i])
-    blank[i] = like(tbid[-1,i])
+    #blank[i] = like(tbid[-1,i])
 
 counter=0
 for i in range(len(proteins_of_interest)):
@@ -294,18 +293,26 @@ for i in range(len(proteins_of_interest)):
             continue
         for a in range(len(vals)):
             for b in range(len(vals)):
-                tmp = likelihood(smac[:,i])
+                tmp = likelihood(smac[:,counter])
+                print tmp
                 image[x+a,y+b] = tmp
                 counter += 1
-plt.imshow(image,interpolation='nearest',origin='lower',cmap=plt.get_cmap('bwr'))
-plt.xticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest,rotation='vertical')
-plt.yticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest)
-plt.grid(True,which='minor')
-plt.colorbar()
-plt.savefig('earm_sensitivity.png')
-plt.show()   
+print counter
+print np.shape(image)
+# plt.imshow(image,interpolation='nearest',origin='lower',cmap=plt.get_cmap('bwr'))
+# plt.xticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest,rotation='vertical')
+# plt.yticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest)
+# plt.grid(True,which='minor')
+# plt.colorbar()
+# plt.savefig('earm_sensitivity.png')
+# plt.show()   
 
-
-
-
-
+#plt.plot(smac)
+#plt.show()
+all = []
+for i in range(0,len(image),len(vals)):
+    tmp = image[:,i:i+len(vals)].flatten()
+    all.append(tmp)
+plt.boxplot(all,vert=False,labels=proteins_of_interest,showfliers=False)
+plt.savefig('boxplot_protein.png')
+plt.show()
