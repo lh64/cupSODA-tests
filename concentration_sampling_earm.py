@@ -4,13 +4,14 @@ import pysb
 import numpy as np
 import pylab as plt
 import os
-from pysb.tools.cupsoda import *
+from pysb_cupsoda import set_cupsoda_path,CupsodaSolver
 from pysb.bng import generate_equations
 import scipy.interpolate
 import multiprocessing
 from pysb.integrate import odesolve
 from earm.lopez_embedded import model
 from pysb.util import update_param_vals,load_params
+import re
 
 tspan = np.linspace(0, 20000,100)
 
@@ -20,9 +21,9 @@ savename = 'parameters_486'
 
 update_param_vals(model, new_params)
 
-
+set_cupsoda_path("/home/pinojc/CUPSODA")
 run = 'cupSODA'
-run = 'scipy'
+#run = 'scipy'
 
 ATOL = 1e-6
 RTOL = 1e-6
@@ -160,13 +161,14 @@ print("Number of simulations to run = %s" % counter)
 def main():
     
     if run == "cupSODA":
-        set_cupSODA_path("/home/pinojc/CUPSODA")
+        
         global c_matrix , MX_0
         num_particles = len(MX_0)
         mem = 2
         i = 8
-        solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=False)
+        solver = CupsodaSolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=False)
         Start = time.time()
+        quit()
         solver.run(c_matrix, 
                    MX_0 ,
                    n_blocks = np.int(num_particles/i), 
@@ -175,7 +177,6 @@ def main():
                    max_steps = mxstep,
                    load_conc_data = False,
                    memory_usage = mem)
-        print name,num_particles,str(i),mem,time.time()-Start,RTOL,ATOL,len(tspan),np.max(tspan),det,vol,card
         print 'out==',solver.yobs[0][0],solver.yobs[0][-1],'==out'
         os.system('rm -r %s'%os.path.join('.','CUPSODA_%s')%model.name)
         print 'removed directory'
