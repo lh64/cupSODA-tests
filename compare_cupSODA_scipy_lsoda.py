@@ -5,18 +5,19 @@ Created on Tue Mar 24 22:00:07 2015
 @author: James C. Pino
 """
 import time
-import pysb.integrate
+import pysb.integrate as integrate
 import pysb
 import numpy as np
 import pylab as plt
+import re
 import os
-from pysb.tools.cupsoda import *
+from pysb_cupsoda import set_cupsoda_path,CupsodaSolver
 from pysb.bng import generate_equations
 import sys
 import multiprocessing
 
-name = sys.argv[1]
-#name = 'tyson'
+#name = sys.argv[1]
+name = 'tyson'
 if name == 'ras':
     from ras_amp_pka import model
     tspan = np.linspace(0,1500,100)
@@ -24,14 +25,14 @@ if name == 'ras':
 elif name == 'tyson':
     from pysb.examples.tyson_oscillator import model
     tspan = np.linspace(0,100,100)
-    simulations = [10,100,1000,10000,100000]
+    simulations = [10,100,1000,]#10000,100000]
 elif name == 'earm':
     from earm.lopez_embedded import model
     tspan = np.linspace(0, 20000,100)
     simulations = [10,100,1000,10000]
 
-run = 'scipy'
-multi = True
+run = 'cupSODA'
+multi = False
 #run ="cupSODA"
 
 generate_equations(model)
@@ -72,11 +73,11 @@ if run =='scipy':
     global output
     output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
     #global output
-    solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
+    solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', )
     def RUN(params):
         solver.run(params)
 if run == 'cupSODA':
-    set_cupSODA_path("/home/pinojc/CUPSODA")
+    set_cupsoda_path("/home/pinojc/git/cupSODA")
     output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
     #global output
 
@@ -111,7 +112,7 @@ def main(number_particles):
                     continue
                 if i == 64 and name == 'earm':
                     continue
-                solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=True)
+                solver = CupsodaSolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=False)
                 Start = time.time()
                 solver.run(c_matrix, MX_0 , n_blocks = np.int(num_particles/i), \
                 outdir=os.path.join('.','CUPSODA_%s')%model.name, gpu=2,max_steps=mxstep,load_conc_data=False,memory_usage=mem)
@@ -137,14 +138,16 @@ def main(number_particles):
                 (name,num_particles,TIME,RTOL,ATOL,mxstep,np.max(tspan),len(tspan),CPU,GHZ,str(num_processes))
 
 if multi == True:
-    for i in [1,2,4,8,16,32]:
+    for i in [1,2,4]:#,8,16,32]:
         print i
         num_processes = i
         for j in simulations:
             main(j)
 else:
+    num_processes = 1
     for j in simulations:
         main(j)
+quit()
 print output
 outFile = open(sys.argv[2],'w')
 outFile.write(output)
