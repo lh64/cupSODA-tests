@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 11 17:27:41 2014
-
-@author: pinojc
-"""
 import time
 import pysb.integrate
 import pysb
@@ -12,30 +6,24 @@ import pylab as plt
 import os
 from pysb.tools.cupsoda import *
 from pysb.bng import generate_equations
-import sys
 import scipy.interpolate
 import multiprocessing
-
-#name = sys.argv[1]
-name = 'earm'
-if name == 'ras':
-    from ras_amp_pka import model
-    tspan = np.linspace(0,1500,100)
-    simulations = [10,100,1000,10000,100000]
-elif name == 'tyson':
-    from pysb.examples.tyson_oscillator import model
-    tspan = np.linspace(0,25,50)
-    simulations = [10,100,1000,10000,100000]
-elif name == 'earm':
-    from earm.lopez_embedded import model
-    tspan = np.linspace(0, 20000,100)
-    simulations = [10,100,1000,10000]
 from pysb.integrate import odesolve
+from earm.lopez_embedded import model
+from pysb.util import update_param_vals,load_params
 
-ref = odesolve(model, tspan, integrator='lsoda', verbose=False)
+tspan = np.linspace(0, 20000,100)
+
+new_params = load_params('Params_486/pars_embedded_486.txt')
+#new_params = load_params('Params_911/pars_embedded_911.txt')
+savename = 'parameters_486'
+
+update_param_vals(model, new_params)
+
 
 run = 'cupSODA'
-multi = False
+run = 'scipy'
+
 ATOL = 1e-6
 RTOL = 1e-6
 mxstep=20000
@@ -48,7 +36,7 @@ GHZ = '3.40'
 
 
 generate_equations(model)
-solver = pysb.integrate.Solver(model, tspan, integrator='vode', rtol=1e-6, atol=1e-6,)
+#proteins_of_interest = ['L_0','Mcl1_0','Bak_0','Bax_0']
 proteins_of_interest = []
 for i in model.initial_conditions:
     proteins_of_interest.append(i[1].name)
@@ -73,15 +61,12 @@ nominal_values = np.array([p.value for p in model.parameters])
 xnominal = np.log10(nominal_values[rate_mask])
 par_dict = {par_names[i] : i for i in range(len(par_names))}
 par_vals = np.array([model.parameters[nm].value for nm in par_names])
-            
-# momp_obs_total = model.parameters['Smac_0'].value
-# momp_data = np.array([9810.0, 180.0, momp_obs_total])
-# momp_var = np.array([7245000.0, 3600.0, 1e4])
+
             
 def likelihood1(initial_tmp):
-    
-    solver.run(initial_changes=initial_tmp)
-    ysim_momp = solver.yobs['aSmac']
+    solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', mxstep=mxstep)
+    solver.run(param_values=initial_tmp)
+    ysim_momp = solver.yobs['cPARP']
     if np.nanmax(ysim_momp) == 0:
         print 'No aSmac!'
         ysim_momp_norm = ysim_momp
@@ -99,12 +84,11 @@ def likelihood1(initial_tmp):
     td = (t10 + t90) / 2
     return   td 
 tod = likelihood1(initial_tmp)
-#print tod
+print tod
 
 def likelihood(ysim_momp):
 
     if np.nanmax(ysim_momp) == 0:
-        #print 'No aSmac!'
         ysim_momp_norm = ysim_momp
         t10 = 0
         t90 = 0
@@ -119,19 +103,15 @@ def likelihood(ysim_momp):
             t10 = 0
             t90 = 0
     td = (t10 + t90) / 2
-    return  (td-tod)/tod 
-def like(data):
-    return np.sum((data - ref['YT'][-1]))
+    return  (td-tod)/tod
 
-#vals = [.75,1.,1.25]
+
+#vals = [.5,1.,10.]
 vals = np.hstack((np.linspace(.7,.9,3),np.logspace(0,.3,5)))
+print vals
 
-#size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest)-len(proteins_of_interest))*len(vals)*len(vals)/2
-size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest))*len(vals)*len(vals) 
-for each in model.initial_conditions:
-    print each
-for each in model.species:
-    print each
+#size_of_matrix = (len(proteins_of_interest)*len(proteins_of_interest))*len(vals)*len(vals) 
+size_of_matrix = (len(proteins_of_interest)*(len(proteins_of_interest)-1))*len(vals)*len(vals)/2 
 
 c_matrix = np.zeros((size_of_matrix, len(model.reactions)))
 rate_args = []
@@ -146,60 +126,55 @@ for j in range(len(model.reactions)):
         else:
             rate *= float(x)
     c_matrix[:,j] = rate
-
+index_of_species_of_interest = {}
 MX_0 = np.zeros((size_of_matrix,len(model.species)))
 for i in xrange(len(model.initial_conditions)):
     for j in xrange(len(model.species)):
         if str(model.initial_conditions[i][0]) == str(model.species[j]):
             x = model.initial_conditions[i][1].value
             MX_0[:,j] = x
-initi = MX_0.copy()
-image = np.zeros((len(proteins_of_interest)*len(vals),len(proteins_of_interest)*len(vals)))
-done = []
+            if model.initial_conditions[i][1].name in proteins_of_interest: 
+                index_of_species_of_interest[model.initial_conditions[i][1].name] = j
+
+
 counter = 0
-for i,one  in enumerate(proteins_of_interest):
-    for j,two in enumerate(proteins_of_interest):
-#         if i == j:
-#             continue
-        #if one+two in done:
-        #    continue
-        #done.append(one+two)
-        #done.append(two+one)
+done = []
+for i  in proteins_of_interest:
+    for j in proteins_of_interest:
+        if j in done:
+            continue
+        if i == j:
+            continue
         for a,c in enumerate(vals):
             for b,d in enumerate(vals):
-                MX_0[counter,i] *= c
-                if i != j:
-                    MX_0[counter,j] *= d
+                x = index_of_species_of_interest[i]
+                y = index_of_species_of_interest[j]
+                MX_0[counter,x] *= c
+                MX_0[counter,y] *= d
                 counter+=1
-print size_of_matrix
-print counter
-#plt.plot(MX_0 - initi)
-#plt.show()
-#quit()
-if run =='scipy':
-    global output
-    output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
-    solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', nsteps=mxstep)
-    def RUN(params):
-        solver.run(params)
-if run == 'cupSODA':
-    set_cupSODA_path("/home/pinojc/CUPSODA")
-    output = "model,nsims,tpb,mem,pythontime,rtol,atol,mxsteps,t_end,n_steps,deterministic,vol,card\n"
+    done.append(i)    
+            
+print("Number of simulations to run = %s" % counter)
+
 
 def main():
     
-    global output
     if run == "cupSODA":
+        set_cupSODA_path("/home/pinojc/CUPSODA")
         global c_matrix , MX_0
         num_particles = len(MX_0)
         mem = 2
         i = 8
-        solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=True)
+        solver = CupSODASolver(model, tspan, atol=ATOL, rtol=RTOL, verbose=False)
         Start = time.time()
-        solver.run(c_matrix, MX_0 , n_blocks = np.int(num_particles/i), \
-        outdir=os.path.join('.','CUPSODA_%s')%model.name, gpu=2,max_steps=mxstep,load_conc_data=False,memory_usage=mem)
-        output +='%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'% \
-        (name,num_particles,str(i),mem,time.time()-Start,RTOL,ATOL,len(tspan),mxstep,np.max(tspan),det,vol,card)
+        solver.run(c_matrix, 
+                   MX_0 ,
+                   n_blocks = np.int(num_particles/i), 
+                   outdir=os.path.join('.','CUPSODA_%s')%model.name, 
+                   gpu = 0,
+                   max_steps = mxstep,
+                   load_conc_data = False,
+                   memory_usage = mem)
         print name,num_particles,str(i),mem,time.time()-Start,RTOL,ATOL,len(tspan),np.max(tspan),det,vol,card
         print 'out==',solver.yobs[0][0],solver.yobs[0][-1],'==out'
         os.system('rm -r %s'%os.path.join('.','CUPSODA_%s')%model.name)
@@ -208,83 +183,56 @@ def main():
         for i in range(num_particles):
             np.savetxt('output_%s.txt'%str(i),solver.yobs[i])
     if run == 'scipy':
-
-        c_matrix = np.zeros((num_particles, len(nominal_values)))
-        c_matrix[:,:] = nominal_values
-        pool = multiprocessing.Pool(processes=num_processes)
+        solver = pysb.integrate.Solver(model, tspan,rtol=RTOL, atol=ATOL, integrator='lsoda', mxstep=mxstep)
+        print("started at %s"%time.time())
         Start = time.time()
-        pool.map(RUN,c_matrix)
+        for i in range(size_of_matrix):
+            solver.run(y0 = MX_0[i,:])
+            np.savetxt('test-output_%s.txt'%str(i),solver.yobs)
         TIME = time.time() - Start
-        print 'sim = %s , time = %s sec' % (number_particles,TIME)
-        output +='%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'% \
-                (name,num_particles,TIME,RTOL,ATOL,mxstep,np.max(tspan),len(tspan),CPU,GHZ,str(num_processes))
+        print 'sim = %s , time = %s sec' % (size_of_matrix,TIME)
+main()
 
-if multi == True:
-    for i in [1,2,4,8,16,32]:
-        print i
-        num_processes = i
-        for j in simulations:
-            main(j)
-else:
-    main()
-#print output
-#outFile = open(sys.argv[2],'w')
-#outFile.write(output)
-#outFile.close()
-image = np.zeros((len(proteins_of_interest)*len(vals),len(proteins_of_interest)*len(vals)))
-X = 1
-Y = 1
-done = []
-y = 0
-x = 0
+tbid = np.zeros((len(tspan),size_of_matrix))
+smac = np.zeros((len(tspan),size_of_matrix))
+cparp = np.zeros((len(tspan),size_of_matrix))
 counter = 0
-# for i in range(len(proteins_of_interest)):
-#     y = i*len(vals)
-#     for j in range(len(proteins_of_interest)):
-#         x = j *len(vals)
-#         if x >= y:
-#             continue
-#         for a in range(len(vals)):
-#             for b in range(len(vals)):
-#                 if   b >= a :
-#                     continue
-#                 elif  b < a :
-#                     tmp = np.loadtxt('output_%s.txt'%str(counter))
-#                     counter += 1
-#                     tmp = likelihood(tmp[:,2])
-#                     image[x+a,y+b] = tmp
-counter = 0
-started = False
 for i in range(len(proteins_of_interest)):
-    y = i*len(vals)
-    for j in range(len(proteins_of_interest)):
-        x = j *len(vals)
+    for j in range(i,len(proteins_of_interest)):
+        if i == j:
+            continue
         for a in range(len(vals)):
             for b in range(len(vals)):
-                tmp = np.loadtxt('output_%s.txt'%str(counter))
+                tmp = np.loadtxt('test-output_%s.txt'%str(counter))
+                tbid[:,counter] = tmp[:,0]
+                smac[:,counter] = tmp[:,1]
+                cparp[:,counter] = tmp[:,2]
                 counter += 1      
-                if started == False:
-                    tbid = tmp[:,0]
-                    smac = tmp[:,1]
-                    cparp = tmp[:,2]
-                    started = True
-                    #plt.plot(tmp)
-                    #plt.show()
-                else:
-                    tbid = np.column_stack((tbid,tmp[:,0]))
-                    smac = np.column_stack((smac,tmp[:,1]))
-                    cparp = np.column_stack((cparp,tmp[:,2]))
-  
 
-blank = np.zeros(np.shape(smac)[1])  
-#for i in range(np.shape(smac)[1]):
-    #blank[i] = likelihood(smac[:,i])
-    #blank[i] = like(tbid[-1,i])
-
+image = np.zeros((len(proteins_of_interest)*len(vals),len(proteins_of_interest)*len(vals)))
 counter=0
+
 for i in range(len(proteins_of_interest)):
     y = i*len(vals)
-    for j in range(len(proteins_of_interest)):
+    for j in range(i,len(proteins_of_interest)):
+        x = j *len(vals)
+        if x == y:
+            continue
+        for a in range(len(vals)):
+            for b in range(len(vals)):
+                tmp = likelihood(cparp[:,counter])
+                image[y+a,x+b] = tmp
+                image[x+b,y+a] = tmp
+                counter += 1
+print counter
+"""    #Good            
+image = np.zeros((len(proteins_of_interest)*len(vals),len(proteins_of_interest)*len(vals)))
+counter=0
+
+for i in range(len(proteins_of_interest)):
+    y = i*len(vals)
+    #counter += len(vals)*len(vals)*i
+    for j in range(i,len(proteins_of_interest)):
         x = j *len(vals)
         if x == y:
             for a in range(len(vals)):
@@ -293,26 +241,29 @@ for i in range(len(proteins_of_interest)):
             continue
         for a in range(len(vals)):
             for b in range(len(vals)):
-                tmp = likelihood(smac[:,counter])
-                print tmp
-                image[x+a,y+b] = tmp
+                tmp = likelihood(cparp[:,counter])
+                image[x+b,y+a] = tmp
+                image[y+a,x+b] = tmp
                 counter += 1
 print counter
-print np.shape(image)
-# plt.imshow(image,interpolation='nearest',origin='lower',cmap=plt.get_cmap('bwr'))
-# plt.xticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest,rotation='vertical')
-# plt.yticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest)
-# plt.grid(True,which='minor')
-# plt.colorbar()
-# plt.savefig('earm_sensitivity.png')
-# plt.show()   
-
-#plt.plot(smac)
-#plt.show()
+"""
+plt.imshow(image,interpolation='nearest',origin='lower',cmap=plt.get_cmap('bwr'))
+plt.xticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest,rotation='vertical')
+plt.yticks(np.arange(len(vals)/2,len(image),len(vals)),proteins_of_interest)
+plt.grid(True,which='minor')
+plt.colorbar()
+plt.savefig('earm_heatplot_%s.pdf'%savename)
+plt.show()  
+    
 all = []
 for i in range(0,len(image),len(vals)):
     tmp = image[:,i:i+len(vals)].flatten()
+    print np.shape(tmp),
+    tmp = tmp[tmp!=0]
+    print np.shape(tmp)
     all.append(tmp)
+#plt.figure(figsize=(3,3))
 plt.boxplot(all,vert=False,labels=proteins_of_interest,showfliers=False)
-plt.savefig('boxplot_protein.png')
+plt.xlabel('Time of death change(%)')
+plt.savefig('earm_boxplot_%s.pdf'%savename)
 plt.show()
