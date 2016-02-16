@@ -7,7 +7,7 @@ figs = os.path.join('..','FIGS')
 if not os.path.exists(figs):
     os.makedirs(figs)
 
-datafile = os.path.join('..', 'cupsoda_timings_all.csv')
+datafile = os.path.join('..', 'all-GPU_timing.csv')
 cupsoda_data = np.genfromtxt(datafile, delimiter=',', dtype=None, names=True)
 
 print cupsoda_data.dtype.names

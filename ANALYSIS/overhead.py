@@ -7,7 +7,7 @@ figs = os.path.join('..','FIGS')
 if not os.path.exists(figs):
     os.makedirs(figs)
 
-datafile = os.path.join('..', 'cupsoda_timings_all.csv')
+datafile = os.path.join('..', 'diablo-GPU_timing.csv')
 cupsoda_data = np.genfromtxt(datafile, delimiter=',', dtype=None, names=True)
 
 print cupsoda_data.dtype.names
@@ -32,6 +32,7 @@ for i,model in enumerate(['tyson', 'ras', 'earm']):
         py_times = [d['pythontime'] for d in cupsoda_data 
                       if  d['model'] == model
                       and d['nsims'] == x]
+        print cs_times
         min_index = 0
         for j in range(1,len(cs_times)):
             if cs_times[j] < cs_times[j-1]:
