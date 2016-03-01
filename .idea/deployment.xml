@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="diablo">
+    <serverData>
+      <paths name="diablo">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/pinojc/nvme/cupSODA-tests" local="$PROJECT_DIR$" web="/home/pinojc/git/" />
+            <mapping deploy="/home/pinojc/git/cupSODA" local="$USER_HOME$/git/cupSODA" web="/home/pinojc/git/cupSODA" />
+            <mapping deploy="/home/pinojc/git/pysb" local="$USER_HOME$/git/pysb" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb-cupsoda" local="$USER_HOME$/git/pysb-cupsoda" web="/" />
+            <mapping deploy="/home/pinojc/git/earm" local="$USER_HOME$/git/earm" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="lolab-760">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/pinojc/git/cupSODA-tests" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/pinojc/git/cupSODA" local="$USER_HOME$/git/cupSODA" web="/" />
+            <mapping deploy="/home/pinojc/git/earm" local="$USER_HOME$/git/earm" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb" local="$USER_HOME$/git/pysb" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb-cupsoda" local="$USER_HOME$/git/pysb-cupsoda" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="mule">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/pinojc/git/cupSODA-tests" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/pinojc/git/cupSODA" local="$USER_HOME$/git/cupSODA" web="/" />
+            <mapping deploy="/home/pinojc/git/earm" local="$USER_HOME$/git/earm" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb" local="$USER_HOME$/git/pysb" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb-cupsoda" local="$USER_HOME$/git/pysb-cupsoda" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="puma">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/pinojc/git/cupSODA-tests" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/pinojc/git/cupSODA" local="$USER_HOME$/git/cupSODA" web="/" />
+            <mapping deploy="/home/pinojc/git/earm" local="$USER_HOME$/git/earm" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb" local="$USER_HOME$/git/pysb" web="/" />
+            <mapping deploy="/home/pinojc/git/pysb-cupsoda" local="$USER_HOME$/git/pysb-cupsoda" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

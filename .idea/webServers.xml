@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="a25b5755-3042-4cc9-abbe-328dd781298b" name="diablo" url="http://diablo.lolab.xyz">
+        <fileTransfer host="diablo.lolab.xyz" port="22" accessType="SFTP" password="dfecdfd8dfcfdfcfdfcedfc5dfc7df9bdf93df93df9a" username="pinojc">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="da8e4a34-7551-46f3-aaee-17b70841bc7b" name="puma" url="http://puma.lolab.xyz">
+        <fileTransfer host="puma.lolab.xyz" port="22" accessType="SFTP" password="dfecdfd8dfcfdfcfdfcedfc5dfc7df9bdf93df93df9a" username="pinojc">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="2d427426-c3c4-4df1-888a-a2aee51ec097" name="mule" url="http://mule.mc.vanderbilt.edu">
+        <fileTransfer host="mule.mc.vanderbilt.edu" port="22" accessType="SFTP" password="dfecdfd8dfcfdfcfdfcedfc5dfc7df9bdf93df93df9a" username="pinojc">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="57f96bc6-ff07-4ec7-b4ea-db83d8d6a13f" name="lolab-760" url="http://lolab-760.dhcp.mc.vanderbilt.edu">
+        <fileTransfer host="lolab-760.dhcp.mc.vanderbilt.edu" port="22" accessType="SFTP" password="dfecdfd8dfcfdfcfdfcedfc5dfc7df9bdf93df93df9a" username="pinojc">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

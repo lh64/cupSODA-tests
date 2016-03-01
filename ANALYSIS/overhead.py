@@ -7,7 +7,7 @@ figs = os.path.join('..','FIGS')
 if not os.path.exists(figs):
     os.makedirs(figs)
 
-datafile = os.path.join('..', 'diablo-GPU_timing.csv')
+datafile = os.path.join('..', 'updated_diablo.csv')
 cupsoda_data = np.genfromtxt(datafile, delimiter=',', dtype=None, names=True)
 
 print cupsoda_data.dtype.names
@@ -51,7 +51,7 @@ for i,model in enumerate(['tyson', 'ras', 'earm']):
         plt.xlim(xmax=xmax)
     plt.subplot(111).yaxis.set_major_formatter(ScalarFormatter())
     
-    plt.savefig(os.path.join(figs,'overhead.pdf'))
+    plt.savefig(os.path.join(figs,'overhead.png'))
 
 plt.show()
 

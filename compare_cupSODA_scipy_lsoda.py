@@ -9,27 +9,30 @@ from pysb.bng import generate_equations
 import sys
 import multiprocessing
 
-name = sys.argv[1]
-#name = 'tyson'
+#name = sys.argv[1]
+name = 'earm'
 if name == 'ras':
     from ras_amp_pka import model
 
     tspan = np.linspace(0, 1500, 100)
     simulations = [10, 100, 1000, 10000, 100000]
+    simulations = [2**8,2**9,2**10, 2**11,2**12,2**13,2**14,2**15,2**16,2**17]
 elif name == 'tyson':
     from pysb.examples.tyson_oscillator import model
     tspan = np.linspace(0, 100, 100)
     simulations = [10, 100, 1000, 10000, 100000]
     simulations = [10, 100, 1000]
+    simulations = [2**8,2**9,2**10, 2**11,2**12,2**13,2**14,2**15,2**16,2**17]
 elif name == 'earm':
     from earm.lopez_embedded import model
     tspan = np.linspace(0, 20000, 100)
     #simulations = [ 1000, 5000, 10000, 15000]
     simulations = [10, 100, 1000, 10000]#,100000]
+    simulations = [2**8,2**9,2**10, 2**11,2**12,2**13,2**14,2**15,2**16,2**17]
 
 run = 'cupSODA'
 multi = False
-run ="scipy"
+#run ="scipy"
 
 generate_equations(model)
 
@@ -63,8 +66,9 @@ rate_params = model.parameters_rules()
 rate_mask = np.array([p in rate_params for p in model.parameters])
 nominal_values = np.array([p.value for p in model.parameters])
 par_dict = {par_names[i]: i for i in range(len(par_names))}
-
-# quit()
+print len(rate_params)
+print len(model.reactions)
+quit()
 if run == 'scipy':
     global output
     output = "model,nsims,scipytime,rtol,atol,mxsteps,t_end,n_steps,cpu,GHz,num_cpu\n"
@@ -99,11 +103,11 @@ def main(number_particles):
         #        if i == 64 and name == 'earm':
         #            continue
         mem = 2
-        i = 16
+        i = 32
         start_time = time.time()
         solver.run(c_matrix,
                    mx_0,
-                   n_blocks=np.int(num_particles / i),
+                   n_blocks=np.ceil(num_particles / i),
                    outdir=os.path.join('/tmp/ramdisk', 'CUPSODA_%s') % model.name,
                    gpu=0,
                    max_steps=mxstep,
@@ -131,7 +135,7 @@ def main(number_particles):
         """
         print 'out==', solver.yobs[0][0], solver.yobs[0][-1], '==out'
         os.system('rm -r %s' % os.path.join('/tmp/ramdisk', 'CUPSODA_%s') % model.name)
-        print 'removed directory'
+        #print 'removed directory'
 
     if run == 'scipy':
 
@@ -164,11 +168,11 @@ if multi:
             main(j)
 else:
     num_processes = 1
-    #main(10)
-    for j in simulations:
-        main(j)
+    main(2**13)
+    #for j in simulations:
+    #    main(j)
 print output
-outFile = open(sys.argv[2], 'w')
-outFile.write(output)
-outFile.close()
+#outFile = open(sys.argv[2], 'w')
+#outFile.write(output)
+#outFile.close()
 

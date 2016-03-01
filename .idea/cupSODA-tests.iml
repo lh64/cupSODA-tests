@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <content url="file://$USER_HOME$/git/cupSODA">
+      <sourceFolder url="file://$USER_HOME$/git/cupSODA" isTestSource="false" />
+    </content>
+    <content url="file://$USER_HOME$/git/earm">
+      <sourceFolder url="file://$USER_HOME$/git/earm" isTestSource="false" />
+      <excludeFolder url="file://$USER_HOME$/git/earm/Analysis" />
+    </content>
+    <content url="file://$USER_HOME$/git/pysb">
+      <sourceFolder url="file://$USER_HOME$/git/pysb" isTestSource="false" />
+    </content>
+    <content url="file://$USER_HOME$/git/pysb-cupsoda" />
+    <orderEntry type="jdk" jdkName="Python 2.7.6 virtualenv at ~/Virtual_envs/cupsoda" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="projectConfiguration" value="Nosetests" />
+    <option name="PROJECT_TEST_RUNNER" value="Nosetests" />
+  </component>
+</module>

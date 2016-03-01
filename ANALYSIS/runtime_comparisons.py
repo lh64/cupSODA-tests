@@ -11,10 +11,10 @@ figs = os.path.join('..','FIGS')
 if not os.path.exists(figs):
     os.makedirs(figs)
 
-datafile = os.path.join('..', '2016_all3.csv')
+datafile = os.path.join('..', 'updated_diablo.csv')
 cupsoda_data = np.genfromtxt(datafile, delimiter=',', dtype=None, names=True)
 
-datafile = os.path.join('..', 'scipy_timings_all.csv')
+datafile = os.path.join('..', 'diablo_cpu.csv')
 scipy_data = np.genfromtxt(datafile, delimiter=',', dtype=None, names=True)
 
 fig = plt.figure(figsize=(12,6))
@@ -45,7 +45,7 @@ for count, model in enumerate(['tyson', 'ras', 'earm']):
         if x not in xdata:
             xdata.append(x)
     
-    fmt = ['x','o','-v']
+    fmt = ['-*','-v','-v']
     lmem = ['global', 'shared', 'hybrid']
     colors = ['red', 'green']
     labels=['PySB/cupSODA', 'cupSODA']
@@ -71,13 +71,13 @@ for count, model in enumerate(['tyson', 'ras', 'earm']):
     plt.yscale('log')
 from matplotlib.ticker import MaxNLocator
 
-ax1.set_xlim(0,10000)
+ax1.set_xlim(0,65536)
 ax1.set_ylim(0,100)
 
-ax2.set_xlim(0,10000)
+ax2.set_xlim(0,65536)
 ax2.set_ylim(0,1000)
 
-ax3.set_xlim(0,10000)
+ax3.set_xlim(0,65536)
 ax3.set_ylim(0,1000)
 
 
@@ -90,7 +90,7 @@ ax2.set_yticks(ax2.get_yticks()[3:])
 ax1.yaxis.set_tick_params(labelsize=14)
 ax2.yaxis.set_tick_params(labelsize=14)
 ax3.yaxis.set_tick_params(labelsize=14)
-ax1.legend( fontsize=14, bbox_to_anchor=(.5, 1.15), fancybox=True)
+ax1.legend( fontsize=14, bbox_to_anchor=(.8, 1.15), fancybox=True)
 ax2.set_ylabel('time (s)',fontsize=14)
 ax3.set_xlabel("Number of simulations",fontsize=14)
 distance = (-60,10)
@@ -103,7 +103,15 @@ ax2.annotate('B', xy=(0, 1), xycoords='axes fraction', fontsize=20,
 ax3.annotate('C', xy=(0, 1), xycoords='axes fraction', fontsize=20,
                 xytext=(-60,10), textcoords='offset points',
                 ha='left', va='top')
-
+ax1.annotate('Tyson', xy=(0, 1), xycoords='axes fraction', fontsize=20,
+             xytext=(5, -5), textcoords='offset points',
+             ha='left', va='top')
+ax2.annotate('Ras/cAMP/PKA', xy=(0, 1), xycoords='axes fraction', fontsize=20,
+             xytext=(5, -5), textcoords='offset points',
+             ha='left', va='top')
+ax3.annotate('EARM', xy=(0, 1), xycoords='axes fraction', fontsize=20,
+             xytext=(5, -5), textcoords='offset points',
+             ha='left', va='top')
 
 from earm.lopez_embedded import model
 proteins_of_interest = []
@@ -135,6 +143,6 @@ ax4.annotate('D', xy=(0, 1), xycoords='axes fraction', fontsize=20,
 plt.tight_layout()
 fig.subplots_adjust(hspace=.02,wspace=.1)
 
+plt.savefig(os.path.join(figs,'all_timing_and_boxplot.eps'),bbox_tight='True')
 plt.savefig(os.path.join(figs,'all_timing_and_boxplot.png'),bbox_tight='True')
-
 plt.show()
